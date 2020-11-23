@@ -65,7 +65,64 @@ final class DescriptiveFunctorTests: XCTestCase {
         
     }
     
+    
+    func testIsoFunctor() {
+        
+        let stringFunctor = IsoFunctor(OptIntStringIso())
+        
+        var value = "FourtyTwo"
+        
+        stringFunctor.apply(to: &value){
+            tryAdd(value: 1337)
+            tryMultiply(with: 1000)
+            set(to: 100)
+            trySubtract(value: 94)
+            tryMultiply(with: 7)
+            tryDivide(by: 1)
+        }
+        
+        XCTAssert(value == "42")
+        
+    }
+    
+    
     static var allTests = [
         ("testExample", testExample),
+        ("testIsoFunctor", testIsoFunctor)
     ]
+}
+
+
+struct OptIntStringIso : Isomorphism {
+    
+    func forward(_ dom: String) -> Int? {
+        Int(dom)
+    }
+    
+    func backward(_ cod: Int?) -> String {
+        cod.map(\.description) ?? "?"
+    }
+    
+}
+
+
+func tryAdd(value: Int) -> (inout Int?) -> Void{
+    {arg in arg.tryChange{$0 += value}}
+}
+
+
+func trySubtract(value: Int) -> (inout Int?) -> Void{
+    {arg in arg.tryChange{$0 -= value}}
+}
+
+func tryMultiply(with value: Int) -> (inout Int?) -> Void{
+    {arg in arg.tryChange{$0 *= value}}
+}
+
+func tryDivide(by value: Int) -> (inout Int?) -> Void{
+    {arg in arg.tryChange{$0 /= value}}
+}
+
+func set<T>(to value: T?) -> (inout T?) -> Void {
+    {arg in arg = value}
 }

@@ -42,9 +42,14 @@ public protocol MonoidFunctor {
     associatedtype InArrow : MonoidArrow
     associatedtype MappedObject
     
-    func apply(to object: inout MappedObject, using arrow: InArrow)
-    func map(_ object: MappedObject, using arrow: InArrow) -> MappedObject
-    
+    func apply(to object: inout MappedObject,
+               using arrow: InArrow)
+    func map(_ object: MappedObject,
+             using arrow: InArrow) -> MappedObject
+    func map(_ object: MappedObject,
+             using arrows: [InArrow]) -> MappedObject
+    func apply(to object: inout MappedObject,
+               using arrows: [InArrow])
 }
 
 
@@ -53,6 +58,40 @@ public extension MonoidFunctor {
     func apply(to object: inout MappedObject,
                using arrow: InArrow) {
         object = map(object, using: arrow)
+    }
+    
+    func map(_ object: MappedObject,
+             using arrows: [InArrow]) -> MappedObject {
+        guard let first = arrows.first else {
+            return object
+        }
+        return map(object,
+                   using: arrows.dropFirst().reduce(first, /))
+    }
+    
+    func apply(to object: inout MappedObject,
+               using arrows: [InArrow]) {
+        object = map(object, using: arrows)
+    }
+    
+    func map(_ object: MappedObject,
+             @ArrayBuilder arrows: () -> [InArrow]) -> MappedObject {
+        map(object, using: arrows())
+    }
+    
+    func apply(to object: inout MappedObject,
+               @ArrayBuilder arrows: () -> [InArrow]) {
+        apply(to: &object, using: arrows())
+    }
+    
+}
+
+@_functionBuilder
+public struct ArrayBuilder {
+    
+    public static func buildBlock<T>(_ args0: T,
+                                 _ list: T...) -> [T] {
+        [args0] + list
     }
     
 }

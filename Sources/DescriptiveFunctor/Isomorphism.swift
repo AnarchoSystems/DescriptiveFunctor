@@ -28,6 +28,23 @@ public struct IsoFunctor<Iso : Isomorphism> : MonoidFunctor {
     }
     
     public func map(_ object: Iso.Dom,
+             using arrows: [Executable<Iso.Cod, Iso.Cod>]) -> Iso.Dom {
+        guard let first = arrows.first else {
+            return object
+        }
+        var out = first(iso.forward(object))
+        for arrow in arrows.dropFirst() {
+            out = arrow(out)
+        }
+        return iso.backward(out)
+    }
+    public func apply(to object: inout Iso.Dom,
+               using arrows: [Executable<Iso.Cod,Iso.Cod>]) {
+        object = map(object,
+                     using: arrows)
+    }
+    
+    public func map(_ object: Iso.Dom,
                     using arrow: (Iso.Cod) -> Iso.Cod) -> Iso.Dom {
         iso.backward(arrow(iso.forward(object)))
     }
@@ -37,6 +54,33 @@ public struct IsoFunctor<Iso : Isomorphism> : MonoidFunctor {
         object = map(object,
                      using: arrow)
     }
+    
+    func apply(to object: inout Iso.Dom,
+                      change: (inout Iso.Cod) -> Void) {
+        var out = iso.forward(object)
+        change(&out)
+        object = iso.backward(out)
+    }
+    
+    func apply(to object: inout Iso.Dom,
+               changes: [(inout Iso.Cod) -> Void]) {
+        guard let first = changes.first else {
+            return
+        }
+        var out = iso.forward(object)
+        first(&out)
+        for change in changes {
+            change(&out)
+        }
+        object = iso.backward(out)
+    }
+    
+    func apply(to object: inout Iso.Dom,
+               @ArrayBuilder changes: () -> [(inout Iso.Cod) -> Void]) {
+        apply(to: &object,
+              changes: changes())
+    }
+    
     
     public func inverted() -> IsoFunctor<Iso.Inverted> {
         IsoFunctor<Iso.Inverted>(iso.inverted())
@@ -52,6 +96,24 @@ public extension IsoFunctor where Iso : Automorphism {
         iso.forward(mutating: &object)
         change(&object)
         iso.backward(mutating: &object)
+    }
+    
+    func apply(mutating object: inout Iso.Dom,
+               changes: [(inout Iso.Cod) -> Void]) {
+        guard let first = changes.first else {
+            return
+        }
+        iso.forward(mutating: &object)
+        first(&object)
+        for change in changes.dropFirst() {
+            change(&object)
+        }
+        iso.backward(mutating: &object)
+    }
+    
+    func apply(mutating object: inout Iso.Dom,
+               @ArrayBuilder changes: () -> [(inout Iso.Cod) -> Void]) {
+        apply(mutating: &object, changes: changes())
     }
     
 }
@@ -158,27 +220,6 @@ public extension Automorphism {
         var copy = cod
         backward(mutating: &copy)
         return copy
-    }
-    
-}
-
-
-public struct IdentityIso<T> : Automorphism {
-    
-    public typealias Dom = T
-    public typealias Cod = T
-    
-    public init(){}
-    
-    @inlinable
-    public func forward(mutating arg: inout T) {}
-    
-    @inlinable
-    public func backward(mutating arg: inout T) {}
-    
-    @inlinable
-    public func inverted() -> IdentityIso<T> {
-        self
     }
     
 }
