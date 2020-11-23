@@ -8,7 +8,7 @@
 import Foundation
 
 
-public struct Functor<UntypedKey : Hashable> {
+public struct CompilerFunctor<UntypedKey : Hashable> {
     
     private var dict : [UntypedKey : ErasedArrow]
     
@@ -18,7 +18,7 @@ public struct Functor<UntypedKey : Hashable> {
     
 }
 
-public extension Functor where UntypedKey == String {
+public extension CompilerFunctor where UntypedKey == String {
     
      mutating func implement<A, B>(key: Header<A, B>,
                                         value: @escaping (A) -> B) {
@@ -49,7 +49,7 @@ public extension Functor where UntypedKey == String {
     
 }
 
-public extension Functor {
+public extension CompilerFunctor {
     
     mutating func implement<E : Erasable>(key: E.TypedKey,
                                           program: E) where UntypedKey == E.TypedKey.Untyped {

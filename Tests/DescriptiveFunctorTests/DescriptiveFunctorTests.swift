@@ -17,7 +17,7 @@ final class DescriptiveFunctorTests: XCTestCase {
         
         //time to create the compiler/interpreter!
         
-        var functor = Functor<String>()
+        var functor = CompilerFunctor<String>()
         
         //write some code for the headers - except "comp"
         
