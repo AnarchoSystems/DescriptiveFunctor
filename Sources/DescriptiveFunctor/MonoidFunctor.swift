@@ -8,9 +8,38 @@
 import Foundation
 
 
+public protocol MonoidArrow {
+    
+    func chain(with other: Self) -> Self
+    
+}
+
+
+public extension MonoidArrow {
+    
+    @inlinable
+    static func /(lhs: Self, rhs: Self) -> Self {
+        lhs.chain(with: rhs)
+    }
+    
+}
+
+public extension Executable {
+    
+    func chain<C>(with other: Executable<B, C>) -> Executable<A, C> {
+        Executable<A,C>{other(self($0))}
+    }
+    
+}
+
+extension Executable : MonoidArrow where A == B {
+    
+}
+
+
 public protocol MonoidFunctor {
     
-    associatedtype InArrow
+    associatedtype InArrow : MonoidArrow
     associatedtype MappedObject
     
     func apply(to object: inout MappedObject, using arrow: InArrow)
@@ -29,7 +58,7 @@ public extension MonoidFunctor {
 }
 
 
-public struct ClosureMonoidFunctor<InArrow, MappedObject> : MonoidFunctor {
+public struct ClosureMonoidFunctor<InArrow : MonoidArrow, MappedObject> : MonoidFunctor {
     
     let _apply: (inout MappedObject, InArrow) -> Void
     

@@ -8,6 +8,12 @@
 import Foundation
 
 
+public func /<T>(_ lhs: @escaping (T) -> T,
+                 _ rhs: @escaping (T) -> (T)) -> (T) -> T {
+    {rhs(lhs($0))}
+}
+
+
 public struct IsoFunctor<Iso : Isomorphism> : MonoidFunctor {
     
     let iso : Iso
@@ -17,8 +23,19 @@ public struct IsoFunctor<Iso : Isomorphism> : MonoidFunctor {
     }
     
     public func map(_ object: Iso.Dom,
-                    using arrow: (Iso.Cod) -> (Iso.Cod)) -> Iso.Dom {
+                    using arrow: Executable<Iso.Cod, Iso.Cod>) -> Iso.Dom {
         iso.backward(arrow(iso.forward(object)))
+    }
+    
+    public func map(_ object: Iso.Dom,
+                    using arrow: (Iso.Cod) -> Iso.Cod) -> Iso.Dom {
+        iso.backward(arrow(iso.forward(object)))
+    }
+    
+    public func apply(to object: inout Iso.Dom,
+                      using arrow: (Iso.Cod) -> Iso.Cod) {
+        object = map(object,
+                     using: arrow)
     }
     
     public func inverted() -> IsoFunctor<Iso.Inverted> {
