@@ -26,7 +26,7 @@ public struct Header<A, B> : Key, Hashable {
     ///Wraps the Header into a Program of same type.
     /// - Returns: A program of appropriate type containing one "line of code".
     public func asProgram() -> Program<A,B> {
-        Program(lines: [untyped])
+        Program(untyped)
     }
     
     ///Chains the header with another header.
@@ -34,7 +34,7 @@ public struct Header<A, B> : Key, Hashable {
     ///     - next: Another header of appropriate type.
     /// - Returns: A Program containing two "lines of code".
     public func chain<C>(_ next: Header<B,C>) -> Program<A,C> {
-        Program(lines: [untyped, next.untyped])
+        Program(untyped, next.untyped)
     }
     
     ///Chains the header with a program.
@@ -42,7 +42,7 @@ public struct Header<A, B> : Key, Hashable {
     ///     - next: A program of appropriate type.
     /// - Returns: A Program containing n + 1 "lines of code".
     public func chain<C>(_ next: Program<B,C>) -> Program<A, C> {
-        Program(lines: [untyped] + next.lines)
+        Program([untyped] + next.lines)
     }
     
     ///Chains the header with another header.
@@ -82,12 +82,20 @@ public struct Program<A, B> : Keys {
     ///The lines of code.
     public let lines : [String]
     
+    internal init(_ lines: [String]){
+        self.lines = lines
+    }
+    
+    internal init(_ lines: String...){
+        self.lines = lines
+    }
+    
     ///Chains the program with a header.
     /// - Parameters:
     ///     - next: A header of appropriate type.
     /// - Returns: A Program containing n + 1 "lines of code".
     public func chain<C>(_ next: Header<B,C>) -> Program<A,C> {
-        Program<A,C>(lines: lines + [next.untyped])
+        Program<A,C>(lines + [next.untyped])
     }
     
     ///Chains the program with another program.
@@ -95,7 +103,7 @@ public struct Program<A, B> : Keys {
     ///     - next: Another program of appropriate type.
     /// - Returns: A Program containing n + m "lines of code".
     public func chain<C>(_ next: Program<B,C>) -> Program<A,C> {
-        Program<A,C>(lines: lines + next.lines)
+        Program<A,C>(lines + next.lines)
     }
     
     ///Chains the program with a header.

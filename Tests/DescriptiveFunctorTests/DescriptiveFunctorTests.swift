@@ -38,7 +38,7 @@ final class DescriptiveFunctorTests: XCTestCase {
         //make sure the program compiles and can be assignes to "comp"
         
         XCTAssertNoThrow(try functor.implement(key: comp,
-                                              program: program))
+                                               program: program))
         
         //do the same calculation using the compiled program "program", the compiled program "comp" and with the interpreter
         
@@ -68,20 +68,31 @@ final class DescriptiveFunctorTests: XCTestCase {
     
     func testIsoFunctor() {
         
-        let stringFunctor = IsoFunctor(OptIntStringIso())
-        
         var value = "FourtyTwo"
+        var called = false
         
-        stringFunctor.apply(to: &value){
-            tryAdd(value: 1337)
-            tryMultiply(with: 1000)
-            set(to: 100)
-            trySubtract(value: 94)
-            tryMultiply(with: 7)
-            tryDivide(by: 1)
+        do {
+            
+            let iso = OptIntStringIso{fwd, bck in
+                XCTAssert(fwd == 1 && bck == 1)
+                called = true
+            }
+            
+            let stringFunctor = IsoFunctor(iso)
+            
+            stringFunctor.apply(to: &value){
+                tryAdd(value: 1337)
+                tryMultiply(with: 1000)
+                set(to: 100)
+                trySubtract(value: 94)
+                tryMultiply(with: 7)
+                tryDivide(by: 1)
+            }
+            
         }
         
         XCTAssert(value == "42")
+        XCTAssert(called)
         
     }
     
@@ -93,14 +104,30 @@ final class DescriptiveFunctorTests: XCTestCase {
 }
 
 
-struct OptIntStringIso : Isomorphism {
+class OptIntStringIso : Isomorphism {
+    
+    var fwdCalled = 0
+    var bckCalled = 0
+    let closure : (Int, Int) -> Void
+    
+    init(_ closure: @escaping (Int, Int) -> Void) {
+        self.closure = closure
+    }
     
     func forward(_ dom: String) -> Int? {
-        Int(dom)
+        fwdCalled += 1
+        XCTAssert(fwdCalled == 1)
+        return Int(dom)
     }
     
     func backward(_ cod: Int?) -> String {
-        cod.map(\.description) ?? "?"
+        bckCalled += 1
+        XCTAssert(bckCalled == 1)
+        return cod.map(\.description) ?? "?"
+    }
+    
+    deinit {
+        closure(fwdCalled, bckCalled)
     }
     
 }
