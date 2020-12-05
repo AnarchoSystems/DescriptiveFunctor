@@ -21,9 +21,9 @@ public protocol AsyncFunctor {
              arrows: [Arrow],
              then callback: @escaping (Result<MappedObject,Error>) -> Void)
     
-    func map(_ value: MappedObject,
+    func chainMap(_ value: MappedObject,
              then callback: @escaping (Result<MappedObject,Error>) -> Void,
-             @ArrayBuilder arrows: () -> [Arrow])
+             @ArrayBuilder _ arrows: () -> [Arrow])
     
 }
 

@@ -43,8 +43,8 @@ final class DescriptiveFunctorTests: XCTestCase {
         //do the same calculation using the compiled program "program", the compiled program "comp" and with the interpreter
         
         guard
-            let compiled = (try? functor.compile(program)).map({$0(40)}),
-            let compiled2 = (try? functor.compile(comp)).map({$0(40)}),
+            let compiled = (try? functor.compile(as: Executable<Int, String>.self, program)).map({$0(40)}),
+            let compiled2 = (try? functor.compile(as: Executable<Int,String>.self, comp)).map({$0(40)}),
             let interpResult = try? functor.run(program, input: 40) else {
             //if any of the calculations fails, the test fails
             return XCTFail()
@@ -61,7 +61,7 @@ final class DescriptiveFunctorTests: XCTestCase {
         let nextProgram = program / "fail" / gna
         
         //make sure the compiler throws an error 
-        XCTAssertThrowsError(try functor.compile(nextProgram))
+        XCTAssertThrowsError(try functor.compile(as: Executable<Int, String>.self, nextProgram))
         
     }
     
@@ -97,9 +97,43 @@ final class DescriptiveFunctorTests: XCTestCase {
     }
     
     
+    func testOptionalFunctor() {
+        
+        let functor = OptionalFunctor()
+        
+        let start = functor.flatMap{(str: String) in
+            Int(str)
+        }
+        
+        let prog1 = functor.chainMap{
+            addC(value: 1337)
+            multiply(with: 1000)
+        }
+        
+        let prog2 = functor.chainMap{
+            subtract(value: 94)
+            multiply(with: 7)
+            divide(by: 1)
+            }
+        
+        let end = functor.flatMap{(int: Int) -> String? in
+            String(int)
+        }
+        
+        let arrow = start / prog1 / setT(to: 100) / prog2 / end
+        
+        let inValue = "FourtyTwo"
+        let outValue = arrow(inValue)
+        
+        XCTAssert(outValue == "42", outValue ?? "?")
+        
+    }
+    
+    
     static var allTests = [
         ("testExample", testExample),
-        ("testIsoFunctor", testIsoFunctor)
+        ("testIsoFunctor", testIsoFunctor),
+         ("testOptionalFunctor", testOptionalFunctor),
     ]
 }
 
@@ -152,4 +186,25 @@ func tryDivide(by value: Int) -> (inout Int?) -> Void{
 
 func set<T>(to value: T?) -> (inout T?) -> Void {
     {arg in arg = value}
+}
+
+func addC(value: Int) -> (Int) -> Int{
+    {$0 + value}
+}
+
+
+func subtract(value: Int) -> (Int) -> Int{
+    {$0 - value}
+}
+
+func multiply(with value: Int) -> (Int) -> Int{
+    {$0 * value}
+}
+
+func divide(by value: Int) -> (Int) -> Int{
+    {$0 / value}
+}
+
+func setT<T>(to value: T) -> (T) -> T {
+    {_ in value}
 }

@@ -20,19 +20,11 @@ public struct CompilerFunctor<UntypedKey : Hashable> {
 
 public extension CompilerFunctor where UntypedKey == String {
     
+    
      mutating func implement<A, B>(key: Header<A, B>,
                                         value: @escaping (A) -> B) {
         dict[key.untyped] = Executable(value).erased()
     }
-    
-     func compile<A,B>(_ program: Program<A,B>) throws -> Executable<A,B> {
-        try compile(program.lines)
-    }
-    
-     func compile<A,B>(_ arrow: Header<A,B>) throws -> Executable<A,B> {
-        try compile([arrow.untyped])
-    }
-    
     
      func run<A, B>(_ arrow: Header<A,B>, input: A) throws -> B {
         try run([arrow.untyped], input: input)
@@ -60,15 +52,22 @@ public extension CompilerFunctor {
     mutating func implement<E : Erasable>(key: E.TypedKey,
                                           program: E.TypedKeys,
                                           as: E.Type) throws where E.TypedKey.Untyped == UntypedKey {
-        let compiled : E = try compile(program)
+        let compiled : E = try compile(as: E.self, program)
         dict[key.untyped] = compiled.erased()
     }
     
-    func compile<E : Erasable>(_ program: E.TypedKeys) throws -> E where E.TypedKey.Untyped == UntypedKey, E.TypedKeys.Untyped == E.TypedKey.Untyped {
-        try compile(program.lines)
+    func compile<E : Erasable>(as type: E.Type = E.self,
+                               _ program: E.TypedKey) throws -> E where E.TypedKey.Untyped == UntypedKey {
+        try compile(as: type, [program.untyped])
     }
     
-    func compile<E : Erasable>(_ untyped: [UntypedKey]) throws -> E where E.TypedKey.Untyped == UntypedKey {
+    func compile<E : Erasable>(as type: E.Type = E.self,
+                               _ program: E.TypedKeys) throws -> E where E.TypedKeys.Untyped == UntypedKey {
+        try compile(as: type, program.lines)
+    }
+    
+    func compile<E : Erasable>(as type: E.Type = E.self,
+                               _ untyped: [UntypedKey]) throws -> E where E.TypedKey.Untyped == UntypedKey {
         guard let lastKey = untyped.last else {
             throw EmptyProgram()
         }
