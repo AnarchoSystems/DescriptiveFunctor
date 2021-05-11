@@ -86,7 +86,7 @@ public extension MonoidFunctor {
     
 }
 
-@_functionBuilder
+@resultBuilder
 public struct ArrayBuilder {
     
     public static func buildBlock<T>(_ args0: T,

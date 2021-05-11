@@ -17,7 +17,7 @@ public extension Program {
 }
 
 
-@_functionBuilder
+@resultBuilder
 public struct ProgBuilder {
     
     public static func buildBlock<A,B,C>
@@ -146,7 +146,7 @@ public func chain<A,B>(@FunctionBuilder _ args: () -> (A) -> B) -> (A) -> B {
     args()
 }
 
-@_functionBuilder
+@resultBuilder
 public struct FunctionBuilder {
     
     
